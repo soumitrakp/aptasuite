@@ -385,13 +385,10 @@ public class AptaTraceMotif {
 		double theta=10.0;
 				
 		ArrayList<SelectionCycle> cycles = Configuration.getExperiment().getSelectionCycles();	
-		System.out.println("cycles length: "+cycles.size());
 		ArrayList<String> roundArr=new ArrayList<String>();
 		for (int x=0; x<cycles.size(); x++)
-		if (cycles.get(x)!=null){
-			System.out.println("cycle name: "+cycles.get(x).getName());
+		if (cycles.get(x)!=null)
 			roundArr.add(cycles.get(x).getName());
-		}
 		int[] rc=new int[roundArr.size()];
 		int numR=roundArr.size();
 		HashMap<String,Integer> round2Id=new HashMap<String,Integer>();
@@ -480,7 +477,6 @@ public class AptaTraceMotif {
 		String resultFolder="k"+klength+"alpha"+singletonThres;
 		
 		// print out all the paramters
-		AptaLogger.log(Level.INFO, this.getClass(),"\nREADING ALL THE PARAMETERS:");
 		/*
 		System.out.println("\nREADING ALL THE PARAMETERS:");	
 		System.out.println("Kmer length: "+klength);		
