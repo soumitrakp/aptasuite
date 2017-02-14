@@ -388,7 +388,7 @@ public class AptaTraceMotif {
 		System.out.println("cycles length: "+cycles.size());
 		ArrayList<String> roundArr=new ArrayList<String>();
 		for (int x=0; x<cycles.size(); x++)
-		if (cycles.get(x).getName()!=null){
+		if (cycles.get(x)!=null){
 			System.out.println("cycle name: "+cycles.get(x).getName());
 			roundArr.add(cycles.get(x).getName());
 		}
