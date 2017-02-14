@@ -383,10 +383,9 @@ public class AptaTraceMotif {
 		boolean outputClusters=Configuration.getParameters().getBoolean("Aptatrace.OutputClusters");
 		int singletonThres = Configuration.getParameters().getInt("Aptatrace.Alpha");
 		double theta=10.0;
-		
-		System.out.println("5 primer "+fivePrime);
-		
-		ArrayList<SelectionCycle> cycles = Configuration.getExperiment().getSelectionCycles();			
+				
+		ArrayList<SelectionCycle> cycles = Configuration.getExperiment().getSelectionCycles();	
+		System.out.println("cycles length: "+cycles.size());
 		ArrayList<String> roundArr=new ArrayList<String>();
 		for (int x=0; x<cycles.size(); x++)
 			roundArr.add(cycles.get(x).getName());
