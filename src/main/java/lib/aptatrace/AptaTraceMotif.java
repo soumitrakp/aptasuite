@@ -621,6 +621,8 @@ public class AptaTraceMotif {
 						//arr1=line.split("[\t ]+");
 						
 						if (aptamerLen!=((int)(contextLongArr.length/5.0))){
+							System.out.println(aptamerLen);
+							System.out.println(contextLongArr.length);
 							throw new Exception("The profile array length is not the same as the aptamer length!!!");
 						}
 												
