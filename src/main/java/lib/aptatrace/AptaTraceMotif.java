@@ -565,7 +565,7 @@ public class AptaTraceMotif {
 					
 					seen.clear();
 					//aptamer=arr[1];
-					aptamer=new String(aptamerArr.getKey());
+					aptamer=fivePrime+new String(aptamerArr.getKey())+threePrime;
 					aptamerLen=aptamerArr.getKey().length;
 					aptamerId=aptamerArr.getValue();
 					numOR=0;
