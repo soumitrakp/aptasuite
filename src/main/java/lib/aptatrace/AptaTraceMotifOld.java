@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.math3.stat.descriptive.rank.Percentile;
+//import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 
 import gui.aptatrace.logo.Logo;
 import gui.aptatrace.logo.LogoSummary;
@@ -23,7 +23,7 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
-public class AptaTraceMotif {
+public class AptaTraceMotifOld {
 		
 	private static char[] nu={'A','G','T','C'};
 	private static int[] fourToPower={1,4,16,64,256,1024,4096,16384,65536,262144,1048576,4194304,16777216};
