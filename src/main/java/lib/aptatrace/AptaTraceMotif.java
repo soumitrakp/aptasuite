@@ -571,13 +571,13 @@ public class AptaTraceMotif {
 					numOR=0;
 					rid=0;
 					for (SelectionCycle sc : experiment.getAllSelectionCycles()){
-						rid++;
 						cardinality=sc.getAptamerCardinality(aptamerId);
 						if (cardinality>0){
 							occCArr[numOR]=cardinality;
 							occRArr[numOR]=rid;
 							numOR++;
 						}
+						rid++;
 					}
 					//arr1=arr[4].split(",");
 					//numOR=arr1.length;
