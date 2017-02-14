@@ -566,7 +566,7 @@ public class AptaTraceMotif {
 					seen.clear();
 					//aptamer=arr[1];
 					aptamer=fivePrime+new String(aptamerArr.getKey())+threePrime;
-					aptamerLen=aptamerArr.getKey().length;
+					aptamerLen=aptamer.length();
 					aptamerId=aptamerArr.getValue();
 					numOR=0;
 					rid=0;
@@ -620,8 +620,9 @@ public class AptaTraceMotif {
 						//line=line.trim();
 						//arr1=line.split("[\t ]+");
 						
-						if (aptamerLen!=((int)(contextLongArr.length/5.0)))
+						if (aptamerLen!=((int)(contextLongArr.length/5.0))){
 							throw new Exception("The profile array length is not the same as the aptamer length!!!");
+						}
 												
 						//contextProbArr[j][0]=Double.parseDouble(arr1[0]);
 						contextProbArr[j][0]=contextLongArr[j*aptamerLen];
