@@ -416,7 +416,7 @@ public class CLI {
 		long tParserStart = System.currentTimeMillis();
 		int counter = 0;
 		StringBuilder sb = new StringBuilder();
-		AptaLogger.log(Level.INFO, this.getClass(),"before initiating");
+		//AptaLogger.log(Level.INFO, this.getClass(),"before initiating");
 		AptaTraceMotif motifFinder=new AptaTraceMotif(experiment);
 		/*
 		for (Entry<byte[], Integer> aptamer : experiment.getAptamerPool().iterator()){
