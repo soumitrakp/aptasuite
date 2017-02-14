@@ -11,7 +11,10 @@ import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
 import java.util.Arrays;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+
 import lib.aptamer.datastructures.Experiment;
+import utilities.AptaLogger;
 
 //import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -473,6 +476,8 @@ public class AptaTraceMotif {
 		String resultFolder="k"+klength+"alpha"+singletonThres;
 		
 		// print out all the paramters
+		AptaLogger.log(Level.INFO, this.getClass(),"\nREADING ALL THE PARAMETERS:");
+		/*
 		System.out.println("\nREADING ALL THE PARAMETERS:");	
 		System.out.println("Kmer length: "+klength);		
 		System.out.println("Five prime end: "+fivePrime+" and three prime end: "+threePrime);
@@ -481,9 +486,10 @@ public class AptaTraceMotif {
 		System.out.println("Prefix output files and directory: "+outputPrefix);
 				
 		System.out.println("And the cycles/rounds:");
+		*/
 		for (int i=0;i<roundArr.size();i++){
 			String rd=roundArr.get(i);
-			System.out.println(rd);
+			//System.out.println(rd);
 		}
 		
 		String[] roundIDs=roundArr.toArray(new String[roundArr.size()]);
