@@ -387,8 +387,10 @@ public class AptaTraceMotif {
 		ArrayList<SelectionCycle> cycles = Configuration.getExperiment().getSelectionCycles();	
 		System.out.println("cycles length: "+cycles.size());
 		ArrayList<String> roundArr=new ArrayList<String>();
-		for (int x=0; x<cycles.size(); x++)
+		for (int x=0; x<cycles.size(); x++){
+			System.out.println("cycles length: "+cycles.get(x).getName());
 			roundArr.add(cycles.get(x).getName());
+		}
 		int[] rc=new int[roundArr.size()];
 		int numR=roundArr.size();
 		HashMap<String,Integer> round2Id=new HashMap<String,Integer>();
