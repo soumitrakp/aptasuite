@@ -526,6 +526,10 @@ public class AptaTraceMotif {
 			
 		}
 		
+		for (SelectionCycle sc : experiment.getAllSelectionCycles()){
+			System.out.println("RRR "+sc.getName());
+		}
+		
 		// iterate through the secondary structure profiles of all the aptamers 
 		// to calculate the context shifting scores of the kmers
 		try {
@@ -556,7 +560,7 @@ public class AptaTraceMotif {
 				boolean firstRead=true;
 				IntOpenHashSet seen=new IntOpenHashSet();
 				
-				experiment.getAptamerPool().size();
+				//experiment.getAptamerPool().size();
 				
 				for (Entry<byte[], Integer> aptamerArr : experiment.getAptamerPool().iterator()){
 				//while ((line = br.readLine()) != null) {
@@ -628,13 +632,33 @@ public class AptaTraceMotif {
 												
 						//contextProbArr[j][0]=Double.parseDouble(arr1[0]);
 						contextProbArr[j][0]=contextLongArr[j*aptamerLen];
+						//if ((Double.isNaN(contextLongArr[j*aptamerLen]))||(contextLongArr[j*aptamerLen]<0.0)){
+							//System.out.println(contextLongArr[j*aptamerLen]);
+							//System.exit(1);
+						//}
 						for (int k=1;k<aptamerLen;k++){
 							//contextProbArr[j][k]=Double.parseDouble(arr1[k])+contextProbArr[j][k-1];
+							//if ((Double.isNaN(contextLongArr[j*aptamerLen+k]))||(contextLongArr[j*aptamerLen+k]<0.0)){
+								//System.out.println(contextLongArr[j*aptamerLen+k]);
+								//System.exit(1);
+							//}
 							contextProbArr[j][k]=contextLongArr[j*aptamerLen+k]+contextProbArr[j][k-1];
 						}
 					}
 					
 					startPos=(klength+fivePrime.length()-1);
+					/*
+					for (int k=0;k<aptamerLen;k++){
+						if (contextLongArr[k]+contextLongArr[k+aptamerLen]+contextLongArr[k+2*aptamerLen]+contextLongArr[k+3*aptamerLen]+contextLongArr[k+4*aptamerLen]>1.0){
+							System.out.println(aptamer+" probability1 greater than 1");
+						}
+						
+						if (contextProbArr[0][k]+contextProbArr[1][k]+contextProbArr[2][k]+contextProbArr[3][k]+contextProbArr[4][k]>1.0){
+							System.out.println(aptamer+" probability2 greater than 1");
+						}
+						
+					}
+					*/
 												
 					// iterate through every kmer of the aptamer under consideration
 					// and sum up its number of occurrences and the sums of the probabilities of being in various structural context 
@@ -648,13 +672,16 @@ public class AptaTraceMotif {
 						for (int j=0;j<5;j++)
 							avgContextProbArr[j]=(contextProbArr[j][k]-contextProbArr[j][k-klength+1])/(klength*1.0f);
 						
+						if (avgContextProbArr[0]+avgContextProbArr[1]+avgContextProbArr[2]+avgContextProbArr[3]+avgContextProbArr[4]>1.0){
+							System.out.println(aptamer+" probability2 greater than 1");
+						}
+						
 						if (!seen.contains(id)){
 							seen.add(id);
 							for (int l=0;l<numOR;l++){
 								mkc[id].addTotalCount(occRArr[l],occCArr[l]);
-							}
+							}	
 						}
-						
 						for (int l=0;l<numOR;l++){
 							if (singletonThres>0){
 								if (occCArr[l]>singletonThres)
@@ -664,12 +691,16 @@ public class AptaTraceMotif {
 							}
 							else
 								mkc[id].addSingletonContextProb(occRArr[l], occCArr[l], avgContextProbArr);
-						}	
+						}
 					}
 					
 					firstRead=false;
 				}
 				
+				
+				for (int i=0;i<rc.length;i++){
+					System.out.println("rc "+rc[i]);
+				}
 			    //br.close();
 			    //gzip.close();
 				//i++;
@@ -719,10 +750,16 @@ public class AptaTraceMotif {
 				mkc[i].deriveSelectionContext();
 				mkc[i].calculateSingletonKLScore(rc);
 				mkc[i].calculateKLScore(rc);
+				/*
+				if (mkc[i].getSingletonKLScore()<0.000001){
+					mkc[i].printOutSingleton();
+				}
+				*/
 			}
 		}
 		
-		class Pair<F, S> {
+		//class Pair<F, S> 
+		class Pair<F extends Comparable<F>, S extends Comparable<S>> implements Comparable<Pair<F, S>> {
 	        private F first; 
 	        private S second; 
 
@@ -745,18 +782,42 @@ public class AptaTraceMotif {
 
 	        public S getSecond() {
 	            return second;
-	        }       
+	        }
+	        
+	        public int compareTo(Pair<F, S> pair) {
+	            int result = second.compareTo(pair.getSecond());
+	            //return (result == 0) ? e.compareTo(pair.e) : result;
+	            return result;
+	        }
 	    }
+		
+		ArrayList<Pair<Integer,Integer>> lastRoundPool=new ArrayList<Pair<Integer,Integer>>();
 				
 		ArrayList<Double> singletonKLScores=new ArrayList<Double>();	// the arraylist storing background context shifting scores for aptamers with singleton occurrences
 		ArrayList<Double> kmerKLScores=new ArrayList<Double>();			// the arraylist storing context shifting scores for aptamers with non-singleton occurrences
 		ArrayList<Double> proportionAL=new ArrayList<Double>();			// the arraylist storing the proprotions of kmer occurrences in the final selection round
+		
 		for (int i=0;i<mkc.length;i++)
-		if (mkc[i].hasEnoughOccurrences()){
+		if ((mkc[i].hasEnoughOccurrences())&&(!((mkc[i].getSingletonKLScore()<0.000001)||(mkc[i].getKLScore()<0.000001)))){
+			/*
+			if ((mkc[i].getSingletonKLScore()<0.000001)||(mkc[i].getKLScore()<0.000001)){
+				System.out.println(mkc[i].getKmer()+" "+mkc[i].getSingletonKLScore()+" "+mkc[i].getKLScore());
+				//System.exit(1);
+			}
+			*/
 			singletonKLScores.add(Math.log((double)mkc[i].getSingletonKLScore()));
 			kmerKLScores.add(Math.log((double)mkc[i].getKLScore()));
 			proportionAL.add(mkc[i].getProportion());
 		}
+		
+		
+		/*
+		for (int i=0;i<mkc.length;i++)
+		if ((mkc[i].hasEnoughOccurrences())&&(mkc[i].getSingletonKLScore()<0.000001)){
+			mkc[i].calculateSingletonKLScore(rc);
+			mkc[i].printOutSingleton();
+		}
+		*/
 		
 		double singletonKLScoreArr[]=new double[singletonKLScores.size()];		// the array storing background context shifting scores for aptamers with singleton occurrences
 		double kmerKLScoreArr[]=new double[kmerKLScores.size()];				// the array storing context shifting scores for aptamers with non-singleton occurrences
@@ -783,6 +844,11 @@ public class AptaTraceMotif {
 		DescriptiveStatistics ds=new DescriptiveStatistics(singletonKLScoreArr);
 		double sMean=ds.getMean();
 		double sStd=ds.getStandardDeviation();
+		//for (double d:kmerKLScoreArr){
+			//System.out.println(d);
+		//}
+		//System.out.println("NULL DISTRIBUTIONS: ");
+		//System.out.println("Range: ["+ds.getMin()+","+ds.getMax()+"]"+" with mean "+sMean+" and standard deviation: "+sStd);
 		
 		//theta=(mkc.length*theta)/(kmerKLScoreArr.length*1.0);
 		//theta=10.0;
@@ -791,17 +857,13 @@ public class AptaTraceMotif {
 		// and topThetaValue is the 90 quantile of all the context shifting scores
 		double topThetaValue=sortedKLScoreArr[(int)Math.floor(((100.0-theta)/100.0)*sortedKLScoreArr.length)];
 		double topThetaProportion=sortedProportionArr[(int)Math.floor(((100.0-theta)/100.0)*sortedKLScoreArr.length)];		
-		/*
-		System.out.println("NULL DISTRIBUTIONS: ");
-		System.out.println("Range: ["+ds.getMin()+","+ds.getMax()+"]"+" with mean "+sMean+" and standard deviation: "+sStd);
-		
-		
+			
 		ds=new DescriptiveStatistics(kmerKLScoreArr);
 		sMean=ds.getMean();
 		sStd=ds.getStandardDeviation();
-		System.out.println("SCORE DISTRIBUTIONS: ");
-		System.out.println("Range: ["+ds.getMin()+","+ds.getMax()+"]"+" with mean "+sMean+" and standard deviation: "+sStd);
-		*/
+		//System.out.println("SCORE DISTRIBUTIONS: ");
+		//System.out.println("Range: ["+ds.getMin()+","+ds.getMax()+"]"+" with mean "+sMean+" and standard deviation: "+sStd);
+		
 		
 		try {
 			PrintWriter writer=new PrintWriter(outputPath+"/results/"+resultFolder+"/"+outputPrefix+"_"+klength+"_singletonKLScore.txt", "UTF-8");
@@ -958,7 +1020,7 @@ public class AptaTraceMotif {
 		
 		System.out.println("Number of seeds/clusters before filtering: "+totalSeeds);
 		
-		/*
+		
 		System.out.println("\nCOMPUTE THE CONTEXT TRACE AND PWM OF EACH CLUSTER:");
 		Int2IntOpenHashMap id2Count=new Int2IntOpenHashMap();	// last round aptamer id with counts  
 
@@ -974,14 +1036,20 @@ public class AptaTraceMotif {
 			int numOR;
 			//String[] arr;
 			//String[] arr1;
-			String[] occR;
-			String[] occC;
-			int[] occRArr;
-			int[] occCArr;
+			//String[] occR;
+			//String[] occC;
+			//int[] occRArr;
+			//int[] occCArr;
+			int[] occRArr=new int[roundArr.size()];
+			int[] occCArr=new int[roundArr.size()];
+			int cardinality;
 			int id=0;
 			int startPos;
 			int rid;
-			int aid;
+			//int aid;
+			int aptamerLen;
+			int aptamerId;
+			double[] contextLongArr;
 			double[][] contextProbArr=new double[5][];
 			double[] avgContextProbArr=new double[5];
 			boolean firstRead=true;
@@ -989,37 +1057,65 @@ public class AptaTraceMotif {
 			int mid;
 			String kmer;
 			
-			while ((line = br.readLine()) != null) {
-				line=line.trim();
-				arr=line.split("[>\t]+");
-				aid=Integer.parseInt(arr[2]);
+			for (Entry<byte[], Integer> aptamerArr : experiment.getAptamerPool().iterator()){
+			//while ((line = br.readLine()) != null) {
+				//line=line.trim();
+				//arr=line.split("[>\t]+");
+				//aid=Integer.parseInt(arr[2]);
 				seen.clear();
-				aptamer=arr[1];
-				arr1=arr[4].split(",");
-				numOR=arr1.length;
-				occRArr=new int[numOR];
-				occCArr=new int[numOR];
-				for (int r=0;r<numOR;r++)
-					occCArr[r]=Integer.parseInt(arr1[r]);
-				
-				arr1=arr[3].split(",");
-				for (int r=0;r<numOR;r++){
-					rid=round2Id.get(arr1[r]);
-					occRArr[r]=rid;
+				//aptamer=arr[1];
+				aptamer=fivePrime+new String(aptamerArr.getKey())+threePrime;
+				aptamerLen=aptamer.length();
+				aptamerId=aptamerArr.getValue();
+				//arr1=arr[4].split(",");
+				//numOR=arr1.length;
+				//occRArr=new int[numOR];
+				//occCArr=new int[numOR];
+				//for (int r=0;r<numOR;r++)
+					//occCArr[r]=Integer.parseInt(arr1[r]);
+				numOR=0;
+				rid=0;
+				for (SelectionCycle sc : experiment.getAllSelectionCycles()){
+					cardinality=sc.getAptamerCardinality(aptamerId);
+					if (cardinality>0){
+						occCArr[numOR]=cardinality;
+						occRArr[numOR]=rid;
+						numOR++;
+					}
+					rid++;
 				}
+				
+				
+				//arr1=arr[3].split(",");
+				//for (int r=0;r<numOR;r++){
+					//rid=round2Id.get(arr1[r]);
+					//occRArr[r]=rid;
+				//}
 				
 
 			
 				if (firstRead){
 					for (int j=0;j<5;j++)
-						contextProbArr[j]=new double[arr[1].length()];
+						//contextProbArr[j]=new double[arr[1].length()];
+						contextProbArr[j]=new double[aptamerLen];
 				}
 				
+				/*
 				if (aptamer.length()>contextProbArr[0].length){
 					for (int j=0;j<5;j++)
-						contextProbArr[j]=new double[aptamer.length()];
+						//contextProbArr[j]=new double[aptamer.length()];
+						contextProbArr[j]=new double[aptamerLen];
+				}
+				*/
+				
+				if (contextProbArr[0].length!=aptamerLen){
+					if (contextProbArr[0].length<aptamerLen){
+						for (int j=0;j<5;j++)
+							contextProbArr[j]=new double[aptamerLen];
+					}
 				}
 				
+				/*
 				for (int j=0;j<5;j++){
 					line = br.readLine();
 					line=line.trim();
@@ -1028,30 +1124,55 @@ public class AptaTraceMotif {
 					for (int k=1;k<arr1.length;k++)
 						contextProbArr[j][k]=Double.parseDouble(arr1[k])+contextProbArr[j][k-1];
 				}
+				*/
+				contextLongArr=experiment.getStructurePool().getStructure(aptamerId);
+				for (int j=0;j<5;j++){		
+					/*
+					if (aptamerLen!=((int)(contextLongArr.length/5.0))){
+						System.out.println(aptamerLen);
+						System.out.println(contextLongArr.length);
+						throw new Exception("The profile array length is not the same as the aptamer length!!!");
+					}
+					*/
+											
+					contextProbArr[j][0]=contextLongArr[j*aptamerLen];
+					for (int k=1;k<aptamerLen;k++)
+						contextProbArr[j][k]=contextLongArr[j*aptamerLen+k]+contextProbArr[j][k-1];
+				}
 				
 				startPos=(klength+fivePrime.length()-1);
 				
 				// iterate through each kmer of the aptamer and decide whether the kmer is in the list of kmers with significant context shifting scores
 				// if it is, summing the total number of occurrences and the sums of probabilities of being in various structural context  of its motifs
-				for (int k=startPos;k<(arr[1].length()-threePrime.length());k++){
-					kmer=arr[1].substring(k-klength+1,k+1);
+				for (int k=startPos;k<(aptamer.length()-threePrime.length());k++){
+					//kmer=arr[1].substring(k-klength+1,k+1);
+					kmer=aptamer.substring(k-klength+1,k+1);
 					if (k==startPos)
 						id=calculateId(kmer);
 					else
-						id=calulateNewId(id,arr[1].charAt(k-klength),arr[1].charAt(k),klength);
+						id=calulateNewId(id,aptamer.charAt(k-klength),aptamer.charAt(k),klength);
 					
 					if (kmer2Clus.containsKey(id)){ 
 						mid=kmer2Clus.get(id);
 
 						if ((occRArr[occRArr.length-1]==roundArr.size()-1)){
 							if (occCArr[occCArr.length-1]>singletonThres){
-									outputMotifs.get(mid).addToPWM(fillBlanks(outputMotifs.get(mid).getKmerAlignment(kmer),arr[1],k-klength+1), occCArr[occCArr.length-1]);
-									outputMotifs.get(mid).addOccId(aid, occCArr[occCArr.length-1]);
+									//outputMotifs.get(mid).addToPWM(fillBlanks(outputMotifs.get(mid).getKmerAlignment(kmer),arr[1],k-klength+1), occCArr[occCArr.length-1]);
+									//outputMotifs.get(mid).addOccId(aid, occCArr[occCArr.length-1]);
+									if (mid==42){
+										System.out.println("count "+occCArr[occCArr.length-1]);
+										outputMotifs.get(mid).printPWM();
+									}
+									outputMotifs.get(mid).addToPWM(fillBlanks(outputMotifs.get(mid).getKmerAlignment(kmer),aptamer,k-klength+1), occCArr[occCArr.length-1]);
+									if (mid==42)
+										outputMotifs.get(mid).printPWM();									
+									outputMotifs.get(mid).addOccId(aptamerId, occCArr[occCArr.length-1]);
+									lastRoundPool.add(new Pair(aptamerId,occCArr[occCArr.length-1]));
 							}
 							else{
-								outputMotifs.get(mid).addToSingletonPWM(fillBlanks(outputMotifs.get(mid).getKmerAlignment(kmer),arr[1],k-klength+1), occCArr[occCArr.length-1]);
+								outputMotifs.get(mid).addToSingletonPWM(fillBlanks(outputMotifs.get(mid).getKmerAlignment(kmer),aptamer,k-klength+1), occCArr[occCArr.length-1]);
 							}
-							id2Count.put(aid, occCArr[occCArr.length-1]);
+							id2Count.put(aptamerId, occCArr[occCArr.length-1]);
 						}
 						
 						for (int j=0;j<5;j++)
@@ -1076,11 +1197,252 @@ public class AptaTraceMotif {
 				firstRead=false;
 			}
 			
-		    br.close();
-		    gzip.close();
-			i++;
-			dataFolder=outputPath+"/data/"+i;
-		}
-		*/
+			boolean[] filtered=new boolean[outputMotifs.size()];
+			for (int j=0;j<filtered.length;j++)
+				filtered[j]=false;
+			
+			if (filterClusters){
+				System.out.println("\nFILTERING MOTIFS...");
+				
+				IntOpenHashSet curOccSet=new IntOpenHashSet();
+				// filters out the smaller motifs that their intersection with larger motifs more than 2/3 of their sizes 
+				for (int j=0;j<outputMotifs.size();j++){
+					if (outputMotifs.get(j).getOverlapPercentage(curOccSet, id2Count)<=0.67){
+						outputMotifs.get(j).addTo(curOccSet, id2Count);
+						filtered[j]=false;
+					}
+					else
+						filtered[j]=true;
+				}
+			}
+			
+			
+			ArrayList<PrintWriter> clusterWriter=new ArrayList<PrintWriter>();
+			HashMap<Integer,Integer> c2fc=new HashMap<Integer,Integer>();
+
+			// prints out the PWM matrixes and aptamers that contain the motifs
+			try{
+				int numRM=0;
+				for (int j=0;j<outputMotifs.size();j++)
+				if (!filtered[j]){
+					numRM++;
+					outputMotifs.get(j).normalizeProfile();
+					outputMotifs.get(j).calculateProportion(rc);
+					PrintWriter writer=new PrintWriter(outputPath+"/results/"+resultFolder+"/"+outputPrefix+"_"+klength+"_clus"+(numRM)+"_pwm.txt");
+					//outputMotifs.get(j).printPWM();
+									
+					if (outputClusters){
+						c2fc.put(j, numRM-1);
+						clusterWriter.add(new PrintWriter(outputPath+"/results/"+resultFolder+"/"+outputPrefix+"_"+klength+"_clus"+(numRM)+"_aptamers.txt"));
+					}
+					
+				    outputMotifs.get(j).trim();
+				    outputMotifs.get(j).printPWM(writer);
+					writer.close();
+					
+					double[][] pwm=outputMotifs.get(j).getPWM();
+					String[] pid=new String[pwm.length];
+					for (int k=0;k<pid.length;k++)
+						pid[k]=String.valueOf(k+1);
+					Logo seq = new Logo(pwm, pid);
+					seq.setAlphabetNucleotides();
+					seq.setAlphabetRibonucleotides();
+					seq.setBit(true);
+					seq.saveAsPDF(600, 400, outputPath+"/results/"+resultFolder+"/"+outputPrefix+"_"+klength+"_clus"+(numRM)+"_pwm.pdf");
+					
+					double[][] traceMat=outputMotifs.get(j).getTraceMatrix();
+					
+					Logo trace = new Logo(traceMat, roundIDs);
+					trace.setAlphabetContexts();
+					trace.setBit(false);
+					trace.saveAsPDF(600, 400, outputPath+"/results/"+resultFolder+"/"+outputPrefix+"_"+klength+"_clus"+(numRM)+"_context.pdf");
+					
+					
+					writer=new PrintWriter(outputPath+"/results/"+resultFolder+"/"+outputPrefix+"_"+klength+"_clus"+(numRM)+"_context.txt");
+					outputMotifs.get(j).printContextTrace(writer,roundArr);
+					writer.close();
+					
+					File file1 = new File(outputPath+"/results/"+resultFolder+"/"+outputPrefix+"_"+klength+"_clus_tmp_"+(j+1)+".txt");
+					File file2 = new File(outputPath+"/results/"+resultFolder+"/"+outputPrefix+"_"+klength+"_clus"+(numRM)+".txt");
+					file1.renameTo(file2);
+				}
+				else{
+					File file1 = new File(outputPath+"/results/"+resultFolder+"/"+outputPrefix+"_"+klength+"_clus_tmp_"+(j+1)+".txt");
+					file1.delete();
+				}
+				if (filterClusters)
+					System.out.println("Number of remaining motifs: "+numRM);
+			}
+			catch (Exception e){
+				//System.out.println(line);
+				e.printStackTrace();
+				System.exit(1);
+			}
+			
+			String cmd;
+			Process p;
+			
+
+			
+			/*
+			System.out.println();
+			for (int j=0;j<outputMotifs.size();j++)
+			if (!filtered[j]){
+				//System.out.println("Motif "+(j+1)+" occupies "+outputMotifs.get(j).getProportion()+" of final pool");
+				System.out.format("Motif %d occupies %.2f%% of final pool\n",(j+1),outputMotifs.get(j).getProportion()*100.0);
+			}
+			*/
+			
+			for (int j=0;j<outputMotifs.size();j++)
+			if (!filtered[j]){
+				
+				int idl=outputMotifs.get(j).getPWM().length;
+				
+				String[] idArr = new String[idl];
+				for (int k=0;k<idArr.length;k++)
+					idArr[k]=Integer.toString(k+1);
+				
+				//summary.AddRow(new Logo(outputMotifs.get(j).getPWM(),id),sorted.get(MotifSeedIDArr.get(j)).getKmer(),sorted.get(MotifSeedIDArr.get(j)).getPValue(), outputMotifs.get(j).getProportion()*100.00,outputMotifs.get(j).getTrace(roundIDs));
+				summary2.AddRow(new Logo(outputMotifs.get(j).getPWM(),idArr),sorted.get(MotifSeedIDArr.get(j)).getKmer(),sorted.get(MotifSeedIDArr.get(j)).getPValue(), sorted.get(MotifSeedIDArr.get(j)).getProportion()*100.0, outputMotifs.get(j).getProportion()*100.00,outputMotifs.get(j).getTrace(roundIDs));
+			}
+			
+			//summary.saveAsPDF(outputPath+"/results/"+resultFolder+"/"+outputPrefix+"_"+klength+"_summary.pdf");
+			summary2.saveAsPDF(outputPath+"/results/"+resultFolder+"/"+outputPrefix+"_"+klength+"_fullsummary.pdf");
+			
+			// prints out the aptamers in the last selection round that have frequency more than singleton threshold and contain the motifs
+			if (outputClusters){
+				Collections.sort(lastRoundPool);
+				
+				//experiment.
+				//for (Entry<byte[], Integer> aptamerArr : experiment.getAptamerPool().iterator()){
+				//}
+				int aptamerCount;
+				for (int i=lastRoundPool.size()-1;i>=0;i--){
+					aptamer=fivePrime+new String(experiment.getAptamerPool().getAptamer(lastRoundPool.get(i).getFirst()))+threePrime;
+					aptamerCount=lastRoundPool.get(i).getSecond();
+					
+					startPos=(klength+fivePrime.length()-1);
+					IntOpenHashSet seencid=new IntOpenHashSet();
+					
+					// iterate through each kmer of the aptamer and decide whether the aptamer contains a motif
+					for (int k=startPos;k<(aptamer.length()-threePrime.length());k++){
+						kmer=aptamer.substring(k-klength+1,k+1);
+						if (k==startPos)
+							id=calculateId(kmer);
+						else
+							id=calulateNewId(id,aptamer.charAt(k-klength),aptamer.charAt(k),klength);
+						
+						if (kmer2Clus.containsKey(id)){ 
+							mid=kmer2Clus.get(id);
+								if ((!filtered[mid])&&(!seencid.contains(mid))){
+									//clusterWriter.get(c2fc.get(mid)).println(aptamer+"\t"+occCArr[occCArr.length-1]);
+									clusterWriter.get(c2fc.get(mid)).format("%s\t%d\t%d\t%.2f%%\n",aptamer,aptamerCount,(int)(aptamerCount*1000000.0/(rc[rc.length-1]*1.0)),aptamerCount/(rc[rc.length-1]*1.0));
+									seencid.add(mid);
+								}
+						}
+					}					
+				}
+				/*
+				int i=0;
+				String dataFolder=outputPath+"/data/"+i;
+				
+				System.out.println("\nREADING DATA AGAIN AND OUTPUTING APTAMERS CONTAINING THE MOTIFS:");
+				while (new File(dataFolder).exists()){
+					System.out.print(dataFolder+"\r");
+					String inputStructureFile=dataFolder+"/aptatrace_prepare_sequence_profiles.txt.gz";
+					
+					GZIPInputStream gzip = new GZIPInputStream(new FileInputStream(inputStructureFile));
+					BufferedReader br = new BufferedReader(new InputStreamReader(gzip));
+					int numOR;
+					String[] arr;
+					String[] arr1;
+					String[] occR;
+					String[] occC;
+					int[] occRArr;
+					int[] occCArr;
+					int id=0;
+					int startPos;
+					int rid;
+					int aid;
+					boolean firstRead=true;
+					IntOpenHashSet seen=new IntOpenHashSet();
+					int mid;
+					String kmer;
+					
+					while ((line = br.readLine()) != null) {
+						line=line.trim();
+						arr=line.split("[>\t]+");
+						aid=Integer.parseInt(arr[2]);
+						seen.clear();
+						arr1=arr[4].split(",");
+						numOR=arr1.length;
+						occRArr=new int[numOR];
+						occCArr=new int[numOR];
+						for (int r=0;r<numOR;r++)
+							occCArr[r]=Integer.parseInt(arr1[r]);
+						
+						arr1=arr[3].split(",");
+						for (int r=0;r<numOR;r++){
+							rid=round2Id.get(arr1[r]);
+							occRArr[r]=rid;
+						}
+						
+						for (int j=0;j<5;j++){
+							line = br.readLine();
+							line=line.trim();
+							arr1=line.split("[\t ]+");
+							
+						}
+						
+						startPos=(klength+fivePrime.length()-1);
+						IntOpenHashSet seencid=new IntOpenHashSet();
+						
+						// iterate through each kmer of the aptamer and decide whether the aptamer contains a motif
+						for (int k=startPos;k<(arr[1].length()-threePrime.length());k++){
+							kmer=arr[1].substring(k-klength+1,k+1);
+							if (k==startPos)
+								id=calculateId(kmer);
+							else
+								id=calulateNewId(id,arr[1].charAt(k-klength),arr[1].charAt(k),klength);
+							
+							if (kmer2Clus.containsKey(id)){ 
+								mid=kmer2Clus.get(id);
+								if ((occRArr[occRArr.length-1]==roundArr.size()-1)){
+									if ((!filtered[mid])&&(occCArr[occCArr.length-1]>singletonThres)&&(!seencid.contains(mid))){
+										clusterWriter.get(c2fc.get(mid)).println(arr[1]+"\t"+occCArr[occCArr.length-1]);
+										//clusterWriter.get(c2fc.get(mid)).format("%s\t%d\t%d\t%.2f%%\n",arr[1],occCArr[occCArr.length-1],(int)(occCArr[occCArr.length-1]*1000000.0/(rc[rc.length-1]*1.0)),occCArr[occCArr.length-1]/(rc[rc.length-1]*1.0));
+										seencid.add(mid);
+									}
+								}	
+							}
+						}
+						
+						firstRead=false;
+					}
+					
+				    br.close();
+				    gzip.close();
+					i++;
+					dataFolder=outputPath+"/data/"+i;
+				}
+				*/
+				
+				if (outputClusters)
+				{
+					for (int i=0;i<clusterWriter.size();i++)
+						clusterWriter.get(i).close();
+					
+					// sort the aptamers according their frequencies
+					//ExternalSort es = new ExternalSort(rc[rc.length-1]);
+					//for (i=0;i<clusterWriter.size();i++)
+						//es.sort(outputPath+"/results/"+resultFolder+"/"+outputPrefix+"_"+klength+"_clus"+(i+1)+"_aptamers.txt", outputPath+"/results/"+resultFolder+"/"+outputPrefix+"_"+klength+"_clus"+(i+1)+"_aptamers.txt",outputPath+"/results/"+resultFolder+"/", 10000);
+				}
+			}
+			System.out.println();
+			
+		    //br.close();
+		    //gzip.close();
+			//i++;
+			//dataFolder=outputPath+"/data/"+i;
 	}
 }
